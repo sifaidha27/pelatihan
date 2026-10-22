@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="id" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kafe Senja - Menu Digital & Pemesanan</title>
+
+    <!-- Google Fonts: Poppins -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Poppins', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f0fdf4',
+                            100: '#dcfce7',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Custom CSS for Scrollbars & Animations -->
+    <style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Glassmorphism Effect */
+        .glass-header {
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Custom Bounce Toast Animation */
+        @keyframes toastIn {
+            from { transform: translateY(100%) scale(0.9); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .animate-toast {
+            animation: toastIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-100 font-sans min-h-full transition-colors duration-300 antialiased selection:bg-brand-500 selection:text-white">
+
+    <!-- Main Mobile Shell Container -->
+    <div class="max-w-md mx-auto bg-slate-50 dark:bg-gray-900 min-h-screen flex flex-col shadow-2xl relative border-x border-gray-200 dark:border-gray-800 pb-24">
+
+        <!-- Header -->
+        <header class="sticky top-0 z-30 glass-header bg-white/80 dark:bg-gray-900/80 border-b border-gray-200/60 dark:border-gray-800 px-5 py-4 transition-colors">
+            <div class="flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-semibold tracking-wider uppercase text-brand-600 dark:text-brand-500">Selamat Datang di</span>
+                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white leading-tight flex items-center gap-2">
+                        Kafe Senja ☕
+                    </h1>
+                </div>
+
+                <!-- Action Buttons: Theme Toggle & Add Menu -->
+                <div class="flex items-center gap-2">
+                    <button id="add-menu-btn" onclick="openAddModal()" title="Tambah Menu Baru" 
+                        class="p-2.5 rounded-full bg-brand-50 dark:bg-gray-800 text-brand-600 dark:text-brand-500 hover:bg-brand-100 dark:hover:bg-gray-700 transition-all duration-200 active:scale-95 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                        </svg>
+                    </button>
+                    <button id="theme-toggle" onclick="toggleDarkMode()" title="Ubah Mode Tampilan" 
+                        class="p-2.5 rounded-full bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-amber-400 hover:bg-gray-200 dark:hover:bg-gray-700 transition-all duration-200 active:scale-95 shadow-sm">
+                        <!-- Sun Icon -->
+                        <svg id="sun-icon" class="w-5 h-5 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+                        </svg>
+                        <!-- Moon Icon -->
+                        <svg id="moon-icon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Scan, pilih favoritmu, dan pesan langsung dari meja!</p>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="p-5 flex-1 space-y-5">
+
+            <!-- Search Bar -->
+            <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-gray-400">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                </div>
+                <input type="text" id="search-input" oninput="handleSearch()"
+                    placeholder="Cari menu... (cth: Kopi Susu, Croissant)" 
+                    class="w-full pl-10 pr-10 py-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-2xl border border-gray-200 dark:border-gray-700/80 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent text-sm placeholder-gray-400 dark:placeholder-gray-500 shadow-sm transition-all duration-200">
+                <button id="clear-search" onclick="clearSearch()" class="hidden absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Main Category Tabs -->
+            <div class="flex items-center gap-2 border-b border-gray-200 dark:border-gray-800 pb-3 overflow-x-auto no-scrollbar">
+                <button onclick="setCategory('Semua')" id="cat-Semua"
+                    class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 bg-brand-600 text-white shadow-md shadow-brand-500/20">
+                    ✨ Semua Menu
+                </button>
+                <button onclick="setCategory('Minuman')" id="cat-Minuman"
+                    class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700">
+                    ☕ Minuman
+                </button>
+                <button onclick="setCategory('Makanan')" id="cat-Makanan"
+                    class="cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700">
+                    🍰 Makanan
+                </button>
+            </div>
+
+            <!-- Quick Filter Chips -->
+            <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5">
+                <!-- Under 20k Filter -->
+                <button onclick="toggleUnder20kFilter()" id="chip-under20k"
+                    class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-brand-500">
+                    <span>🏷️</span>
+                    <span>&lt; Rp 20.000</span>
+                </button>
+                <!-- Favorite Filter -->
+                <button onclick="toggleFavoriteFilter()" id="chip-favorite"
+                    class="px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-rose-400">
+                    <span>❤️</span>
+                    <span>Favorit Saya</span>
+                </button>
+            </div>
+
+            <!-- Menu List Grid -->
+            <div id="menu-container" class="grid grid-cols-1 gap-4 pt-1">
+                <!-- Dynamic Items Rendered Here via JS -->
+            </div>
+
+            <!-- Empty State Display -->
+            <div id="empty-state" class="hidden text-center py-12 px-4 space-y-3">
+                <div class="text-5xl">🔍</div>
+                <h3 class="text-base font-semibold text-gray-800 dark:text-gray-200">Menu Tidak Ditemukan</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 max-w-xs mx-auto">Coba kata kunci lain atau ubah filter pencarian Anda.</p>
+                <button onclick="resetFilters()" class="mt-2 text-xs font-semibold text-brand-600 dark:text-brand-500 hover:underline">Reset Semua Filter</button>
+            </div>
+
+        </main>
+
+        <!-- Floating Cart Bar Bottom -->
+        <div id="floating-cart" class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md p-4 z-20 pointer-events-none">
+            <button onclick="openCartModal()" id="cart-bar-btn"
+                class="pointer-events-auto w-full bg-gray-900 dark:bg-brand-600 hover:bg-black dark:hover:bg-brand-700 text-white rounded-2xl p-4 shadow-xl flex items-center justify-between transition-all duration-300 transform active:scale-98">
+                <div class="flex items-center gap-3">
+                    <div class="relative bg-white/20 p-2 rounded-xl">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/>
+                        </svg>
+                        <span id="cart-badge" class="absolute -top-1 -right-1 bg-rose-500 text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border-2 border-gray-900 dark:border-brand-600">0</span>
+                    </div>
+                    <div class="text-left">
+                        <p class="text-xs text-gray-300 dark:text-brand-100 font-medium"><span id="cart-count-text">0 item</span> dipilih</p>
+                        <p id="cart-total-price" class="text-base font-bold">Rp 0</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1.5 text-xs font-semibold bg-white/10 dark:bg-black/20 px-3 py-1.5 rounded-xl">
+                    <span>Lihat Pesanan</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </div>
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MODAL 1: ADD NEW MENU ITEM -->
+    <div id="add-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-5 shadow-2xl transform transition-transform duration-300 border border-gray-100 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3">
+                <h3 class="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
+                    <span>✨</span> Tambah Menu Baru
+                </h3>
+                <button onclick="closeAddModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <form id="add-menu-form" onsubmit="handleAddMenuSubmit(event)" class="space-y-4">
+                <!-- Nama Menu -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Nama Menu *</label>
+                    <input type="text" id="new-item-name" required placeholder="Contoh: Espresso Float"
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                </div>
+
+                <!-- Kategori & Emoji -->
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Kategori *</label>
+                        <select id="new-item-category" required
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="Minuman">☕ Minuman</option>
+                            <option value="Makanan">🍰 Makanan</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Ikon / Emoji</label>
+                        <input type="text" id="new-item-emoji" maxlength="2" placeholder="☕ / 🥐"
+                            class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 text-center">
+                    </div>
+                </div>
+
+                <!-- Harga -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Harga (Rupiah) *</label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 pl-3.5 flex items-center text-xs font-bold text-gray-400">Rp</span>
+                        <input type="number" id="new-item-price" required min="1000" step="500" placeholder="20000"
+                            class="w-full pl-10 pr-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    </div>
+                </div>
+
+                <!-- Deskripsi -->
+                <div>
+                    <label class="block text-xs font-semibold text-gray-700 dark:text-gray-300 mb-1">Deskripsi Singkat</label>
+                    <textarea id="new-item-desc" rows="2" placeholder="Jelaskan rasa atau bahan utama..."
+                        class="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 resize-none"></textarea>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="pt-2">
+                    <button type="submit" 
+                        class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-semibold text-sm shadow-lg shadow-brand-500/30 transition-all active:scale-98">
+                        Simpan & Tambahkan Menu
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL 2: SHOPPING CART DRAWER -->
+    <div id="cart-modal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 hidden flex items-end sm:items-center justify-center p-0 sm:p-4 transition-opacity duration-300">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-md rounded-t-3xl sm:rounded-3xl p-6 space-y-5 shadow-2xl transform transition-transform duration-300 border border-gray-100 dark:border-gray-700 max-h-[85vh] flex flex-col">
+            
+            <!-- Modal Header -->
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-700 pb-3 flex-shrink-0">
+                <div class="flex items-center gap-2">
+                    <h3 class="text-lg font-bold text-gray-900 dark:text-white">Pesanan Saya</h3>
+                    <span id="cart-item-count-badge" class="bg-brand-100 text-brand-700 dark:bg-brand-900/50 dark:text-brand-300 text-xs px-2 py-0.5 rounded-full font-bold">0</span>
+                </div>
+                <button onclick="closeCartModal()" class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 p-1">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Table Number Input -->
+            <div class="bg-gray-50 dark:bg-gray-900 p-3 rounded-xl flex items-center justify-between flex-shrink-0">
+                <label for="table-number" class="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center gap-1.5">
+                    <span>🪑</span> Nomor Meja:
+                </label>
+                <input type="number" id="table-number" min="1" max="99" value="05" 
+                    class="w-16 px-2 py-1 text-center font-bold text-sm bg-white dark:bg-gray-800 text-gray-900 dark:text-white rounded-lg border border-gray-200 dark:border-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <!-- Cart Items List (Scrollable) -->
+            <div id="cart-items-list" class="flex-1 overflow-y-auto space-y-3 pr-1 min-h-[150px]">
+                <!-- Cart items rendered dynamically -->
+            </div>
+
+            <!-- Order Summary Footer -->
+            <div class="border-t border-gray-100 dark:border-gray-700 pt-4 space-y-3 flex-shrink-0">
+                <div class="space-y-1.5 text-xs text-gray-500 dark:text-gray-400">
+                    <div class="flex justify-between">
+                        <span>Subtotal</span>
+                        <span id="cart-subtotal" class="font-semibold text-gray-800 dark:text-gray-200">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Pajak & Layanan (10%)</span>
+                        <span id="cart-tax" class="font-semibold text-gray-800 dark:text-gray-200">Rp 0</span>
+                    </div>
+                    <div class="flex justify-between text-sm font-bold text-gray-900 dark:text-white pt-1 border-t border-dashed border-gray-200 dark:border-gray-700">
+                        <span>Total Pembayaran</span>
+                        <span id="cart-grand-total" class="text-brand-600 dark:text-brand-500 text-base">Rp 0</span>
+                    </div>
+                </div>
+
+                <button onclick="processCheckout()" id="btn-checkout"
+                    class="w-full py-3.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-sm shadow-lg shadow-brand-500/30 transition-all active:scale-98 flex items-center justify-center gap-2">
+                    <span>Pesan Sekarang</span>
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+                    </svg>
+                </button>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- MODAL 3: SUCCESS CHECKOUT ORDER RECEIPT -->
+    <div id="success-modal" class="fixed inset-0 bg-black/70 backdrop-blur-md z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-gray-800 w-full max-w-sm rounded-3xl p-6 text-center space-y-4 shadow-2xl border border-gray-100 dark:border-gray-700 animate-toast">
+            <div class="w-16 h-16 bg-brand-100 dark:bg-brand-900/50 text-brand-600 dark:text-brand-400 rounded-full flex items-center justify-center mx-auto text-3xl shadow-inner">
+                ✓
+            </div>
+            <div>
+                <h3 class="text-xl font-bold text-gray-900 dark:text-white">Pesanan Diterima!</h3>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Pesanan Anda sedang disiapkan oleh barista/koki kami. Mohon tunggu sejenak.</p>
+            </div>
+
+            <div class="bg-gray-50 dark:bg-gray-900 p-4 rounded-2xl text-left space-y-2 border border-gray-100 dark:border-gray-800">
+                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-800 pb-2">
+                    <span>No. Meja: <strong id="receipt-table" class="text-gray-800 dark:text-white">05</strong></span>
+                    <span id="receipt-date">Hari ini</span>
+                </div>
+                <div id="receipt-items-summary" class="text-xs text-gray-700 dark:text-gray-300 space-y-1 py-1 max-h-32 overflow-y-auto">
+                    <!-- Dynamic summary -->
+                </div>
+                <div class="flex justify-between text-xs font-bold text-gray-900 dark:text-white pt-2 border-t border-gray-200 dark:border-gray-800">
+                    <span>Total Lunas</span>
+                    <span id="receipt-total" class="text-brand-600 dark:text-brand-500">Rp 0</span>
+                </div>
+            </div>
+
+            <button onclick="closeSuccessModal()" 
+                class="w-full py-3 rounded-xl bg-gray-900 dark:bg-gray-700 hover:bg-black text-white font-semibold text-xs transition-all active:scale-98">
+                Tutup & Buat Pesanan Baru
+            </button>
+        </div>
+    </div>
+
+    <!-- TOAST NOTIFICATION -->
+    <div id="toast" class="fixed bottom-20 left-1/2 -translate-x-1/2 bg-gray-900/90 dark:bg-white/90 backdrop-blur-md text-white dark:text-gray-900 px-4 py-2.5 rounded-full text-xs font-medium shadow-2xl z-50 flex items-center gap-2 pointer-events-none transition-all duration-300 opacity-0 translate-y-4">
+        <span id="toast-icon">✨</span>
+        <span id="toast-msg">Notifikasi</span>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        /* ==========================================
+           1. INITIAL DATA & STATE MANAGEMENT
+           ========================================== */
+        
+        // Initial Default Menu Items
+        const DEFAULT_MENU = [
+            { id: '1', name: 'Kopi Susu Senja', category: 'Minuman', price: 18000, emoji: '☕', description: 'Espresso dengan susu segar dan gula aren khas Kafe Senja.', isFavorite: true },
+            { id: '2', name: 'Americano Cold', category: 'Minuman', price: 15000, emoji: '🧊', description: 'Double shot espresso disajikan dingin dan menyegarkan.', isFavorite: false },
+            { id: '3', name: 'Croissant Butter', category: 'Makanan', price: 22000, emoji: '🥐', description: 'Roti renyah berlapis butter gurih berkualitas tinggi.', isFavorite: true },
+            { id: '4', name: 'Matcha Latte Ice', category: 'Minuman', price: 24000, emoji: '🍵', description: 'Matcha Jepang premium dipadu dengan susu yang creamy.', isFavorite: false },
+            { id: '5', name: 'Roti Bakar Cokelat', category: 'Makanan', price: 18000, emoji: '🍞', description: 'Roti panggang empuk dengan lumeran cokelat premium.', isFavorite: false },
+            { id: '6', name: 'Dimsum Ayam Kukus', category: 'Makanan', price: 19000, emoji: '🥟', description: '4 pcs dimsum olahan daging ayam pilihan disajikan hangat.', isFavorite: true },
+            { id: '7', name: 'Ice Caramel Macchiato', category: 'Minuman', price: 26000, emoji: '🧋', description: 'Paduan vanila, espresso, susu, dan drizzle karamel manis.', isFavorite: false },
+            { id: '8', name: 'Kentang Goreng Crisp', category: 'Makanan', price: 15000, emoji: '🍟', description: 'Kentang goreng gurih renyah dengan saus keju pilihan.', isFavorite: false }
+        ];
+
+        // Global Application State
+        let menuItems = [];
+        let cart = []; // Array of { id, quantity }
+        let currentCategory = 'Semua';
+        let searchQuery = '';
+        let filterUnder20k = false;
+        let filterFavoriteOnly = false;
+
+        /* ==========================================
+           2. LIFECYCLE & STORAGE
+           ========================================== */
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadStateFromStorage();
+            initTheme();
+            renderMenu();
+            updateCartUI();
+        });
+
+        function loadStateFromStorage() {
+            // Load Menu Items
+            const savedMenu = localStorage.getItem('kafe_senja_menu');
+            if (savedMenu) {
+                try { menuItems = JSON.parse(savedMenu); } 
+                catch(e) { menuItems = DEFAULT_MENU; }
+            } else {
+                menuItems = DEFAULT_MENU;
+                saveMenuToStorage();
+            }
+
+            // Load Cart Items
+            const savedCart = localStorage.getItem('kafe_senja_cart');
+            if (savedCart) {
+                try { cart = JSON.parse(savedCart); } catch(e) { cart = []; }
+            }
+        }
+
+        function saveMenuToStorage() {
+            localStorage.setItem('kafe_senja_menu', JSON.stringify(menuItems));
+        }
+
+        function saveCartToStorage() {
+            localStorage.setItem('kafe_senja_cart', JSON.stringify(cart));
+        }
+
+        /* ==========================================
+           3. THEME TOGGLE (DARK MODE)
+           ========================================== */
+
+        function initTheme() {
+            const isDark = localStorage.getItem('kafe_senja_theme') === 'dark' || 
+                           (!('kafe_senja_theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches);
+            
+            if (isDark) {
+                document.documentElement.classList.add('dark');
+                document.getElementById('sun-icon').classList.remove('hidden');
+                document.getElementById('moon-icon').classList.add('hidden');
+            } else {
+                document.documentElement.classList.remove('dark');
+                document.getElementById('sun-icon').classList.add('hidden');
+                document.getElementById('moon-icon').classList.remove('hidden');
+            }
+        }
+
+        function toggleDarkMode() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('kafe_senja_theme', isDark ? 'dark' : 'light');
+            
+            document.getElementById('sun-icon').classList.toggle('hidden', !isDark);
+            document.getElementById('moon-icon').classList.toggle('hidden', isDark);
+            
+            showToast(isDark ? 'Mode Gelap Aktif 🌙' : 'Mode Terang Aktif ☀️');
+        }
+
+        /* ==========================================
+           4. RENDER MENU & FILTERS
+           ========================================== */
+
+        function renderMenu() {
+            const container = document.getElementById('menu-container');
+            const emptyState = document.getElementById('empty-state');
+
+            // Filter logic
+            const filtered = menuItems.filter(item => {
+                const matchCategory = (currentCategory === 'Semua') || (item.category === currentCategory);
+                const matchSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                                    (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
+                const matchPrice = !filterUnder20k || (item.price < 20000);
+                const matchFav = !filterFavoriteOnly || item.isFavorite;
+
+                return matchCategory && matchSearch && matchPrice && matchFav;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                emptyState.classList.remove('hidden');
+                return;
+            }
+
+            emptyState.classList.add('hidden');
+
+            container.innerHTML = filtered.map(item => {
+                const cartEntry = cart.find(c => c.id === item.id);
+                const qty = cartEntry ? cartEntry.quantity : 0;
+
+                return `
+                    <div class="bg-white dark:bg-gray-800/90 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700/60 flex items-center gap-3.5 hover:shadow-md transition-all duration-200 relative group">
+                        
+                        <!-- Emoji/Icon Container -->
+                        <div class="w-16 h-16 bg-brand-50 dark:bg-gray-700/50 rounded-2xl flex items-center justify-center text-3xl flex-shrink-0 shadow-inner">
+                            ${item.emoji || (item.category === 'Minuman' ? '☕' : '🍰')}
+                        </div>
+
+                        <!-- Details -->
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5 mb-0.5">
+                                <span class="text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                                    item.category === 'Minuman' 
+                                    ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300' 
+                                    : 'bg-rose-100 text-rose-800 dark:bg-rose-900/40 dark:text-rose-300'
+                                }">
+                                    ${item.category}
+                                </span>
+                            </div>
+                            <h4 class="text-sm font-bold text-gray-900 dark:text-white truncate">${escapeHtml(item.name)}</h4>
+                            <p class="text-xs text-gray-500 dark:text-gray-400 line-clamp-1 mt-0.5">${escapeHtml(item.description || '')}</p>
+                            <p class="text-xs font-bold text-brand-600 dark:text-brand-500 mt-1">${formatRupiah(item.price)}</p>
+                        </div>
+
+                        <!-- Actions (Favorite & Add Button) -->
+                        <div class="flex flex-col items-end justify-between self-stretch">
+                            <!-- Favorite Toggle -->
+                            <button onclick="toggleFavorite('${item.id}')" title="Favoritkan" class="text-gray-300 dark:text-gray-600 hover:text-rose-500 dark:hover:text-rose-400 transition-colors p-1">
+                                <svg class="w-5 h-5 ${item.isFavorite ? 'text-rose-500 fill-rose-500' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                                </svg>
+                            </button>
+
+                            <!-- Add To Cart or Quantity Control -->
+                            ${qty === 0 ? `
+                                <button onclick="addToCart('${item.id}')" 
+                                    class="px-3 py-1.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-semibold shadow-sm transition-all duration-200 active:scale-95 flex items-center gap-1">
+                                    <span>+ Tambah</span>
+                                </button>
+                            ` : `
+                                <div class="flex items-center gap-1.5 bg-gray-100 dark:bg-gray-700 p-1 rounded-xl">
+                                    <button onclick="updateCartQuantity('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-white dark:bg-gray-800 text-gray-800 dark:text-white font-bold text-xs flex items-center justify-center shadow-sm active:scale-90">-</button>
+                                    <span class="text-xs font-bold px-1 text-gray-900 dark:text-white">${qty}</span>
+                                    <button onclick="updateCartQuantity('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-brand-600 text-white font-bold text-xs flex items-center justify-center shadow-sm active:scale-90">+</button>
+                                </div>
+                            `}
+                        </div>
+
+                    </div>
+                `;
+            }).join('');
+        }
+
+        /* ==========================================
+           5. FILTERING HANDLERS
+           ========================================== */
+
+        function setCategory(cat) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-tab').forEach(tab => {
+                tab.className = 'cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-200 dark:border-gray-700';
+            });
+
+            const activeBtn = document.getElementById(`cat-${cat}`);
+            if (activeBtn) {
+                activeBtn.className = 'cat-tab px-4 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all duration-200 bg-brand-600 text-white shadow-md shadow-brand-500/20';
+            }
+
+            renderMenu();
+        }
+
+        function handleSearch() {
+            const input = document.getElementById('search-input');
+            const clearBtn = document.getElementById('clear-search');
+            searchQuery = input.value;
+
+            if (searchQuery.length > 0) {
+                clearBtn.classList.remove('hidden');
+            } else {
+                clearBtn.classList.add('hidden');
+            }
+            renderMenu();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('search-input');
+            input.value = '';
+            searchQuery = '';
+            document.getElementById('clear-search').classList.add('hidden');
+            renderMenu();
+        }
+
+        function toggleUnder20kFilter() {
+            filterUnder20k = !filterUnder20k;
+            const chip = document.getElementById('chip-under20k');
+            
+            if (filterUnder20k) {
+                chip.className = 'px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 bg-brand-50 dark:bg-brand-900/40 border-brand-500 text-brand-700 dark:text-brand-300 font-semibold';
+            } else {
+                chip.className = 'px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-brand-500';
+            }
+            renderMenu();
+        }
+
+        function toggleFavoriteFilter() {
+            filterFavoriteOnly = !filterFavoriteOnly;
+            const chip = document.getElementById('chip-favorite');
+
+            if (filterFavoriteOnly) {
+                chip.className = 'px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 bg-rose-50 dark:bg-rose-900/40 border-rose-500 text-rose-700 dark:text-rose-300 font-semibold';
+            } else {
+                chip.className = 'px-3.5 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 flex items-center gap-1.5 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-300 hover:border-rose-400';
+            }
+            renderMenu();
+        }
+
+        function toggleFavorite(id) {
+            const item = menuItems.find(m => m.id === id);
+            if (item) {
+                item.isFavorite = !item.isFavorite;
+                saveMenuToStorage();
+                renderMenu();
+                showToast(item.isFavorite ? `${item.name} disimpan ke favorit ❤️` : `${item.name} dihapus dari favorit`);
+            }
+        }
+
+        function resetFilters() {
+            searchQuery = '';
+            filterUnder20k = false;
+            filterFavoriteOnly = false;
+            currentCategory = 'Semua';
+
+            document.getElementById('search-input').value = '';
+            document.getElementById('clear-search').classList.add('hidden');
+            
+            // Reset UI States
+            setCategory('Semua');
+            if(filterUnder20k) toggleUnder20kFilter();
+            if(filterFavoriteOnly) toggleFavoriteFilter();
+
+            renderMenu();
+        }
+
+        /* ==========================================
+           6. CART OPERATIONS & CHECKOUT
+           ========================================== */
+
+        function addToCart(id) {
+            const item = menuItems.find(m => m.id === id);
+            if (!item) return;
+
+            const existing = cart.find(c => c.id === id);
+            if (existing) {
+                existing.quantity += 1;
+            } else {
+                cart.push({ id: id, quantity: 1 });
+            }
+
+            saveCartToStorage();
+            renderMenu();
+            updateCartUI();
+            showToast(`${item.name} ditambahkan ke keranjang 🛒`);
+        }
+
+        function updateCartQuantity(id, delta) {
+            const index = cart.findIndex(c => c.id === id);
+            if (index !== -1) {
+                cart[index].quantity += delta;
+                if (cart[index].quantity <= 0) {
+                    cart.splice(index, 1);
+                }
+            }
+            saveCartToStorage();
+            renderMenu();
+            updateCartUI();
+            renderCartModalList();
+        }
+
+        function updateCartUI() {
+            const totalItems = cart.reduce((acc, curr) => acc + curr.quantity, 0);
+            
+            // Calculate Total Price
+            let subtotal = 0;
+            cart.forEach(c => {
+                const item = menuItems.find(m => m.id === c.id);
+                if (item) subtotal += item.price * c.quantity;
+            });
+
+            document.getElementById('cart-badge').textContent = totalItems;
+            document.getElementById('cart-count-text').textContent = `${totalItems} item`;
+            document.getElementById('cart-total-price').textContent = formatRupiah(subtotal);
+            
+            const floatingCart = document.getElementById('floating-cart');
+            if (totalItems > 0) {
+                floatingCart.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            } else {
+                floatingCart.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }
+        }
+
+        function openCartModal() {
+            renderCartModalList();
+            document.getElementById('cart-modal').classList.remove('hidden');
+        }
+
+        function closeCartModal() {
+            document.getElementById('cart-modal').classList.add('hidden');
+        }
+
+        function renderCartModalList() {
+            const listContainer = document.getElementById('cart-items-list');
+            const badge = document.getElementById('cart-item-count-badge');
+            
+            let subtotal = 0;
+            let totalItems = 0;
+
+            if (cart.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="text-center py-8 text-gray-400">
+                        <span class="text-4xl block mb-2">🛒</span>
+                        <p class="text-xs">Keranjang Anda masih kosong.</p>
+                    </div>
+                `;
+                badge.textContent = '0';
+                document.getElementById('cart-subtotal').textContent = 'Rp 0';
+                document.getElementById('cart-tax').textContent = 'Rp 0';
+                document.getElementById('cart-grand-total').textContent = 'Rp 0';
+                document.getElementById('btn-checkout').disabled = true;
+                document.getElementById('btn-checkout').classList.add('opacity-50', 'cursor-not-allowed');
+                return;
+            }
+
+            document.getElementById('btn-checkout').disabled = false;
+            document.getElementById('btn-checkout').classList.remove('opacity-50', 'cursor-not-allowed');
+
+            listContainer.innerHTML = cart.map(c => {
+                const item = menuItems.find(m => m.id === c.id);
+                if (!item) return '';
+
+                const itemTotal = item.price * c.quantity;
+                subtotal += itemTotal;
+                totalItems += c.quantity;
+
+                return `
+                    <div class="flex items-center justify-between bg-gray-50 dark:bg-gray-900/60 p-3 rounded-xl border border-gray-100 dark:border-gray-800">
+                        <div class="flex items-center gap-3">
+                            <span class="text-2xl">${item.emoji || '☕'}</span>
+                            <div>
+                                <h5 class="text-xs font-bold text-gray-900 dark:text-white">${escapeHtml(item.name)}</h5>
+                                <p class="text-[11px] text-brand-600 dark:text-brand-400 font-semibold">${formatRupiah(item.price)}</p>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center gap-2">
+                            <button onclick="updateCartQuantity('${item.id}', -1)" class="w-6 h-6 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 text-gray-800 dark:text-white font-bold text-xs flex items-center justify-center">-</button>
+                            <span class="text-xs font-bold px-1 text-gray-900 dark:text-white">${c.quantity}</span>
+                            <button onclick="updateCartQuantity('${item.id}', 1)" class="w-6 h-6 rounded-lg bg-brand-600 text-white font-bold text-xs flex items-center justify-center">+</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            const tax = Math.round(subtotal * 0.10);
+            const grandTotal = subtotal + tax;
+
+            badge.textContent = totalItems;
+            document.getElementById('cart-subtotal').textContent = formatRupiah(subtotal);
+            document.getElementById('cart-tax').textContent = formatRupiah(tax);
+            document.getElementById('cart-grand-total').textContent = formatRupiah(grandTotal);
+        }
+
+        function processCheckout() {
+            if (cart.length === 0) return;
+
+            const tableNo = document.getElementById('table-number').value || '05';
+            const receiptTable = document.getElementById('receipt-table');
+            const receiptSummary = document.getElementById('receipt-items-summary');
+            const receiptTotal = document.getElementById('receipt-total');
+            const receiptDate = document.getElementById('receipt-date');
+
+            let subtotal = 0;
+            let summaryHTML = '';
+
+            cart.forEach(c => {
+                const item = menuItems.find(m => m.id === c.id);
+                if (item) {
+                    const lineTotal = item.price * c.quantity;
+                    subtotal += lineTotal;
+                    summaryHTML += `
+                        <div class="flex justify-between">
+                            <span>${c.quantity}x ${escapeHtml(item.name)}</span>
+                            <span class="font-semibold">${formatRupiah(lineTotal)}</span>
+                        </div>
+                    `;
+                }
+            });
+
+            const tax = Math.round(subtotal * 0.10);
+            const grandTotal = subtotal + tax;
+
+            receiptTable.textContent = tableNo.padStart(2, '0');
+            receiptDate.textContent = new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+            receiptSummary.innerHTML = summaryHTML;
+            receiptTotal.textContent = formatRupiah(grandTotal);
+
+            // Reset Cart & Close Modal
+            closeCartModal();
+            cart = [];
+            saveCartToStorage();
+            updateCartUI();
+            renderMenu();
+
+            // Show Success Modal
+            document.getElementById('success-modal').classList.remove('hidden');
+        }
+
+        function closeSuccessModal() {
+            document.getElementById('success-modal').classList.add('hidden');
+        }
+
+        /* ==========================================
+           7. ADD NEW MENU ITEM LOGIC
+           ========================================== */
+
+        function openAddModal() {
+            document.getElementById('add-modal').classList.remove('hidden');
+        }
+
+        function closeAddModal() {
+            document.getElementById('add-modal').classList.add('hidden');
+            document.getElementById('add-menu-form').reset();
+        }
+
+        function handleAddMenuSubmit(e) {
+            e.preventDefault();
+
+            const name = document.getElementById('new-item-name').value.trim();
+            const category = document.getElementById('new-item-category').value;
+            const emoji = document.getElementById('new-item-emoji').value.trim() || (category === 'Minuman' ? '☕' : '🍰');
+            const price = parseInt(document.getElementById('new-item-price').value, 10);
+            const description = document.getElementById('new-item-desc').value.trim();
+
+            if (!name || isNaN(price)) return;
+
+            const newItem = {
+                id: 'custom-' + Date.now(),
+                name: name,
+                category: category,
+                price: price,
+                emoji: emoji,
+                description: description || 'Menu spesial racikan Kafe Senja.',
+                isFavorite: false
+            };
+
+            menuItems.unshift(newItem);
+            saveMenuToStorage();
+            renderMenu();
+            closeAddModal();
+            showToast(`Menu "${name}" berhasil ditambahkan! ✨`);
+        }
+
+        /* ==========================================
+           8. UTILITY FUNCTIONS
+           ========================================== */
+
+        function formatRupiah(amount) {
+            return new Intl.NumberFormat('id-ID', {
+                style: 'currency',
+                currency: 'IDR',
+                maximumFractionDigits: 0
+            }).format(amount);
+        }
+
+        function escapeHtml(str) {
+            return str.replace(/[&<>"']/g, function(m) {
+                return {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                }[m];
+            });
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-msg');
+
+            toastMsg.textContent = message;
+            toast.classList.remove('opacity-0', 'translate-y-4');
+            toast.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-100', 'translate-y-0');
+                toast.classList.add('opacity-0', 'translate-y-4');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>
